@@ -8,7 +8,7 @@
 #include <string.h>
 
 char* encrypt(char* ptxt, char* key){
-    int p = 0,k = 0, len = strlen(key);
+    int p = 0,k = 0, len = strlen(ptxt);
     int c = 0;
     int o;
     char* cipher = malloc((len+1)*sizeof(char));
@@ -185,6 +185,8 @@ void handleConnection(int lstnFD){
                 char* cipher = NULL;
                 ptxt = getSocketString(connection);
                 key = getSocketString(connection);
+
+                printf("\n~~~~~~~~~~~~DEBUG\nKEY:%s\nPTXT:%S\n~~~~~~~~~~\n", key, ptxt);
 
                 // Encrypt
                 cipher = encrypt(ptxt, key);

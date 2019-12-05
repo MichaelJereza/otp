@@ -28,6 +28,10 @@ int checkText(char* Text, int len){
 // Get plaintext at argv[1]
 char* getPlain(char* pfile){
     FILE* fd = fopen(pfile, "r");
+    if(fd == NULL){
+        perror("Can't open plaintext\n");
+        exit(1);
+    }
     char* plaintext = NULL; // Plaintext
     size_t ptextSize = 0;   
     int ptextLen = -1;      // Length of plaintext
@@ -48,7 +52,7 @@ char* getKey(char* kfile, int plen){
     keyLen = getline(&key, &keySize, fd);
     
     // Check key isn't shorter than plaintext
-    if(keyLen!=plen){
+    if(keyLen<plen){
         fprintf(stderr, "Invalid keysize: %d\n", keyLen);
         exit(1);
     }

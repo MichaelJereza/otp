@@ -8,7 +8,7 @@
 #include <string.h>
 
 char* decrypt(char* ctxt, char* key){
-    int p = 0,k = 0, len = strlen(key);
+    int p = 0,k = 0, len = strlen(ctxt);
     int c = 0;
     int o;
     char* deciphered = malloc((len+1)*sizeof(char));
