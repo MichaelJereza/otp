@@ -162,29 +162,44 @@ void sendString(int socketFD, char* str){
 
 char* recvCipher(int socketFD, int length){
     int charsRead = -5;
-    char buffer[11];
+    char buffer[10];
     char* key = malloc(sizeof(char)*length);
     memset(key, '\0', length);
     int strLength = 1; // Complete length of string + NULL term
+    int received = 0;
+
+    //printf("\nlen:%d\n",length);
 
     // Loop until no more characters received
     do{
-        charsRead = recv(socketFD, key, length, 0);
-    }while(charsRead!=0);
+        charsRead = recv(socketFD, buffer, 10, 0);
+        if(charsRead>0){
+            // Stop at newline
+            charsRead = strcspn(buffer, "\n");
+            strLength += charsRead;
 
-/*
-    printf("\n===\nPackets:%d\n",strLength);
-    printf("Chars read: %d\nBUFFER: %s\n", charsRead, buffer);
-*/   // printf("Key:%s\n===\n",key);
+            // Copy until newline
+            strncat(key, buffer, charsRead * sizeof(char));
+            memset(buffer, '\0', 10);
+
+            // If encountered newline, stop looping
+            if(charsRead<10){
+                break;
+            }
+        }
+    }while(strLength!=length);
+    key[length-1]='\n';
+    key[length]='\0';
+
    return key;
-
 }
 int main(int argc, char* argv[]){
     // Catch bad parameters
-    if(argc<4){
+    if(argc < 4){
         fprintf(stderr, "Syntax Error!\nUsage: %s plaintext key port\n", argv[0]);
         return 1;
     }
+    
     else{
         // Get cipher
         char* cipher = getCipher(argv[1]);
@@ -197,8 +212,10 @@ int main(int argc, char* argv[]){
         sendString(socket, cipher);
         sendString(socket, key);
         // Recv
-        printf("%s",recvCipher(socket, strlen(key)));
+        char* plaintext = recvCipher(socket, strlen(cipher));
+        printf("%s",plaintext);
         free(cipher);
         free(key);
+        free(plaintext);
     }
 }

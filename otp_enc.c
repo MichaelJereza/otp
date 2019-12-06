@@ -164,21 +164,36 @@ void sendString(int socketFD, char* str){
 
 char* recvCipher(int socketFD, int length){
     int charsRead = -5;
-    char buffer[11];
+    char buffer[10];
     char* key = malloc(sizeof(char)*length);
     memset(key, '\0', length);
     int strLength = 1; // Complete length of string + NULL term
+    int received = 0;
+
+    //printf("\nlen:%d\n",length);
 
     // Loop until no more characters received
     do{
-        charsRead = recv(socketFD, key, length, 0);
-    }while(charsRead!=0);
-/*
-    printf("\n===\nPackets:%d\n",strLength);
-    printf("Chars read: %d\nBUFFER: %s\n", charsRead, buffer);
-*/   // printf("Key:%s\n===\n",key);
-   return key;
+        charsRead = recv(socketFD, buffer, 10, 0);
+        if(charsRead>0){
+            // Stop at newline
+            charsRead = strcspn(buffer, "\n");
+            strLength += charsRead;
 
+            // Copy until newline
+            strncat(key, buffer, charsRead * sizeof(char));
+            memset(buffer, '\0', 10);
+
+            // If encountered newline, stop looping
+            if(charsRead<10){
+                break;
+            }
+        }
+    }while(strLength!=length);
+    key[length-1]='\n';
+    key[length]='\0';
+
+   return key;
 }
 int main(int argc, char* argv[]){
     // Catch bad parameters
@@ -198,8 +213,9 @@ int main(int argc, char* argv[]){
         // Send
         sendString(socket, plaintext);
         sendString(socket, key);
-        // Recv
-        printf("%s",recvCipher(socket, strlen(key)));
+        // Recv        
+        char* cipher =recvCipher(socket, strlen(plaintext));
+        printf("%s",cipher);
         free(plaintext);
         free(key);
     }
