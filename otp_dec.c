@@ -42,7 +42,6 @@ char* getCipher(char* pfile){
         fprintf(stderr, "Can't get from file %s\n", pfile);
         exit(1);
     }
-
     if(checkText(cipher, cLen)){
         fclose(fd);
         return cipher;
