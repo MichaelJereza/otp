@@ -12,7 +12,7 @@ char* decrypt(char* ctxt, char* key){
     int c = 0;
     int o;
     char* deciphered = malloc((len+2)*sizeof(char));
-    
+    memset(deciphered, '\0', len+2);
     for(c = 0; c < len; c++){
         // Get letters removing ascii
         p = ctxt[c]-64;

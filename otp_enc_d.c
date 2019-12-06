@@ -13,6 +13,7 @@ char* encrypt(char* ptxt, char* key){
     int o;
     // Allocate enough for newline and null term
     char* cipher = malloc((len+2)*sizeof(char));    
+    memset(cipher, '\0', len+2);
     for(c = 0; c < len; c++){
         // Get letters removing ascii
         p = ptxt[c]-64;
