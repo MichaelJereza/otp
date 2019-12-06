@@ -11,8 +11,10 @@ char* encrypt(char* ptxt, char* key){
     int p = 0,k = 0, len = strlen(ptxt);
     int c = 0;
     int o;
-    char* cipher = malloc((len+1)*sizeof(char));
+    // Allocate enough for newline and null term
+    char* cipher = malloc((len+2)*sizeof(char));    
     for(c = 0; c < len; c++){
+        // Get letters removing ascii
         p = ptxt[c]-64;
         k = key[c]-64;
 
@@ -44,6 +46,7 @@ char* encrypt(char* ptxt, char* key){
     }
     // Append newline
     cipher[len]='\n';
+    cipher[len+1]='\0';
     return cipher;
 }
 // Returns opened socket filedescriptor
@@ -101,7 +104,7 @@ int verifyConnection(int establishedConnectionFD){
     
     // If not encryption char
     if(buffer[0]!='e'){
-        perror("REJECTED\n");
+        fprintf(stderr, "REJECTED:\nNot otp_enc\n");
         buffer[0]='r';
         send(establishedConnectionFD, buffer, 1, 0);
         return 0;
@@ -117,7 +120,6 @@ int verifyConnection(int establishedConnectionFD){
 
 // Returns ciphertext back to client
 void sendCipher(int establishedConnectionFD, char* cipher){
-   // fflush(establishedConnectionFD);
     int len = strlen(cipher);
     int charsOut = 0, sent = 0;
     do{
@@ -133,8 +135,9 @@ char* getSocketString(int socketFD){
     char buffer[11];
     char* key = NULL;// Not necessarily the key, could be ptxt
     int strLength = 1; // Complete length of string + NULL term
+    memset(buffer, '\0', 11);
 
-    // Loop until no more characters received
+    // Loop until no more characters received                
     do{
         charsRead = recv(socketFD, buffer, 10, 0);
         if(charsRead>0){
@@ -144,13 +147,16 @@ char* getSocketString(int socketFD){
 
             // Reallocate enough space
             key = realloc(key, strLength * sizeof(char));
+            
+            // If initial, set NULL
+            if(strLength<=11){
+                memset(key, '\0', strLength);
+            }
 
             // Copy until newline
-            strncat(key, buffer, charsRead);
+            strncat(key, buffer, charsRead * sizeof(char));
+            memset(buffer, '\0', 11);
 
-            //printf("\n===\nPackets:%d\n",strLength);
-            //printf("Chars read: %d\nBUFFER: %s\n", charsRead, buffer);
-            
             // If encountered newline, stop looping
             if(charsRead<10){
                 break;
@@ -166,8 +172,6 @@ char* getSocketString(int socketFD){
 // Do valid connection, loop forever
 void handleConnection(int lstnFD){
     int connection = -1;
-
-  //  printf("Listening on %d\n", lstnFD);
 
     // Loop connections forever
     while(connection==-1){
@@ -185,8 +189,6 @@ void handleConnection(int lstnFD){
                 char* cipher = NULL;
                 ptxt = getSocketString(connection);
                 key = getSocketString(connection);
-
-                printf("\n~~~~~~~~~~~~DEBUG\nKEY:%s\nPTXT:%S\n~~~~~~~~~~\n", key, ptxt);
 
                 // Encrypt
                 cipher = encrypt(ptxt, key);

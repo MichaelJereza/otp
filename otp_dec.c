@@ -25,24 +25,33 @@ int checkText(char* Text, int len){
     return 1;
 }
 /*------------------------------------plaintex-----------------------------------*/
-// Get plaintext at argv[1]
-char* getPlain(char* pfile){
+// Get cipher at argv[1]
+char* getCipher(char* pfile){
     FILE* fd = fopen(pfile, "r");
     if(fd == NULL){
         perror("Can't open plaintext\n");
         exit(1);
     }
-    char* plaintext = NULL; // Plaintext
-    size_t ptextSize = 0;   
-    int ptextLen = -1;      // Length of plaintext
+    char* cipher = NULL;
+    size_t cSize = 0;   
+    int cLen = -1;
 
-    ptextLen = getline(&plaintext, &ptextSize, fd);
-    // Check plaintext for bad characters
-    if(checkText(plaintext, ptextLen)){
-        return plaintext;
+    cLen = getline(&cipher, &cSize, fd);
+
+    if(cLen<0){
+        fprintf(stderr, "Can't get from file %s\n", pfile);
+        exit(1);
     }
+
+    if(checkText(cipher, cLen)){
+        fclose(fd);
+        return cipher;
+    }
+    fclose(fd);
+    return NULL;
 }
 /*-------------------------------------key---------------------------------------*/
+// Retrieves key from fd kfile, assures key is long enough
 char* getKey(char* kfile, int plen){
     FILE* fd = fopen(kfile, "r");
     char* key = NULL;
@@ -51,15 +60,18 @@ char* getKey(char* kfile, int plen){
 
     keyLen = getline(&key, &keySize, fd);
     
-    // Check key isn't shorter than plaintext
+    // Check key isn't shorter than cipher
     if(keyLen<plen){
         fprintf(stderr, "Invalid keysize: %d\n", keyLen);
         exit(1);
     }
     // Check key for bad characters
     if(checkText(key, keyLen)){
+        fclose(fd);
         return key;
     }
+    fclose(fd);
+    return NULL;
 }
 
 /*------------------------------check---daemon-----------------------------------*/
@@ -81,7 +93,6 @@ int verifyDaemon(int socketFD){
 
     // If rejected
     if(res=='r'){
-        perror("Connection REJECTED\n");
         exit(2);
     }
     // otp_enc connected to otp_enc_d
@@ -159,7 +170,7 @@ char* recvCipher(int socketFD, int length){
     // Loop until no more characters received
     do{
         charsRead = recv(socketFD, key, length, 0);
-    }while(charsRead!=length);
+    }while(charsRead!=0);
 
 /*
     printf("\n===\nPackets:%d\n",strLength);
@@ -175,21 +186,19 @@ int main(int argc, char* argv[]){
         return 1;
     }
     else{
-        // Get plaintext
-        char* plaintext = getPlain(argv[1]);
-        // Now that we have valid plaintext, get length from plaintext
+        // Get cipher
+        char* cipher = getCipher(argv[1]);
         // Get key
-        char* key = getKey(argv[2], strlen(plaintext));
+        char* key = getKey(argv[2], strlen(cipher));
         
-        // printf("key: %s\ntxt: %s", key, plaintext);
         // Connect
         int socket = connectDaemon(argv[3]);
         // Send
-        sendString(socket, plaintext);
+        sendString(socket, cipher);
         sendString(socket, key);
         // Recv
         printf("%s",recvCipher(socket, strlen(key)));
-        free(plaintext);
+        free(cipher);
         free(key);
     }
 }

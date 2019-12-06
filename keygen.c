@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
+// Generates a random keygen ending in newline, size keylen+1
 char* keygen(int keylen){
     // Seed rng
     srand(time(0));

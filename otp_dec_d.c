@@ -11,8 +11,10 @@ char* decrypt(char* ctxt, char* key){
     int p = 0,k = 0, len = strlen(ctxt);
     int c = 0;
     int o;
-    char* deciphered = malloc((len+1)*sizeof(char));
+    char* deciphered = malloc((len+2)*sizeof(char));
+    
     for(c = 0; c < len; c++){
+        // Get letters removing ascii
         p = ctxt[c]-64;
         k = key[c]-64;
 
@@ -25,7 +27,7 @@ char* decrypt(char* ctxt, char* key){
         }
         
         o=p-k;
-        // Modulo subtraction 26 characters and 1 space
+        // Add 26 characters and 1 space
         if(o<0){
             o+=27;
         }
@@ -44,6 +46,7 @@ char* decrypt(char* ctxt, char* key){
     }
     // Append newline
     deciphered[len]='\n';
+    deciphered[len+1]='\0';
     return deciphered;
 }
 // Returns opened socket filedescriptor
@@ -99,9 +102,9 @@ int verifyConnection(int establishedConnectionFD){
         return 0;
     }
     
-    // If not encryption char
+    // If not decryption char
     if(buffer[0]!='d'){
-        perror("REJECTED\n");
+        fprintf(stderr, "REJECTED:\nNot otp_dec\n");
         buffer[0]='r';
         send(establishedConnectionFD, buffer, 1, 0);
         return 0;
@@ -117,7 +120,6 @@ int verifyConnection(int establishedConnectionFD){
 
 // Returns ciphertext back to client
 void sendCipher(int establishedConnectionFD, char* cipher){
-   // fflush(establishedConnectionFD);
     int len = strlen(cipher);
     int charsOut = 0, sent = 0;
     do{
@@ -133,6 +135,7 @@ char* getSocketString(int socketFD){
     char buffer[11];
     char* key = NULL;// Not necessarily the key, could be ptxt
     int strLength = 1; // Complete length of string + NULL term
+    memset(buffer, '\0', 11);
 
     // Loop until no more characters received
     do{
@@ -144,13 +147,16 @@ char* getSocketString(int socketFD){
 
             // Reallocate enough space
             key = realloc(key, strLength * sizeof(char));
+            
+            // If first time initialize
+            if(strLength<=11){
+                memset(key, '\0', strLength);
+            }
 
             // Copy until newline
             strncat(key, buffer, charsRead);
+            memset(buffer, '\0', 11);
 
-            //printf("\n===\nPackets:%d\n",strLength);
-            //printf("Chars read: %d\nBUFFER: %s\n", charsRead, buffer);
-            
             // If encountered newline, stop looping
             if(charsRead<10){
                 break;
@@ -160,18 +166,13 @@ char* getSocketString(int socketFD){
 
     // Acknowledge string received
     charsRead = send(socketFD, "!", 1, 0);
-/*
-    printf("\n===\nPackets:%d\n",strLength);
-    printf("Chars read: %d\nBUFFER: %s\n", charsRead, buffer);
-    printf("Key:%s\n===\n",key);
-  */   return key;
+
+    return key;
 
 }
 // Do valid connection, loop forever
 void handleConnection(int lstnFD){
     int connection = -1;
-
-  //  printf("Listening on %d\n", lstnFD);
 
     // Loop connections forever
     while(connection==-1){
@@ -239,9 +240,6 @@ int main(int argc, char* argv[]){
         pid_t done;
         for(j = 0; j < 5; j++){
             done = wait(&i);
-            
-            //DEBUGGING
-            
             printf("%d DONE: %d\n", i, done);
         }
 

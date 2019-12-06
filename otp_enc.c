@@ -6,13 +6,13 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h> 
-/*---------------------------------checkText-------------------------------------*/
+/*----------------------------------checkText-------------------------------------*/
 // Checks text for invalid characters
 // Exits 1 and first encountered invalid character to stderr
 // Else return 1
 int checkText(char* Text, int len){
     int p;
-    // For each letter of ext - newline
+    // For each letter of text without newline
     // Check validity
     for(p = 0; p < len-1; p++){
         int letter = Text[p];
@@ -26,23 +26,33 @@ int checkText(char* Text, int len){
 }
 /*------------------------------------plaintex-----------------------------------*/
 // Get plaintext at argv[1]
-char* getCipher(char* pfile){
+char* getPlaintext(char* pfile){
     FILE* fd = fopen(pfile, "r");
-    if(fd == NULL){
+ /*   if(fd == NULL){
         perror("Can't open plaintext\n");
         exit(1);
     }
+    */
     char* plaintext = NULL; // Plaintext
     size_t ptextSize = 0;   
     int ptextLen = -1;      // Length of plaintext
 
     ptextLen = getline(&plaintext, &ptextSize, fd);
+    
+    if(ptextLen<0){
+        fprintf(stderr, "Can't get from file %s\n", pfile);
+        exit(1);
+    }
     // Check plaintext for bad characters
     if(checkText(plaintext, ptextLen)){
+        fclose(fd);
         return plaintext;
     }
+    fclose(fd);
+    return NULL;
 }
 /*-------------------------------------key---------------------------------------*/
+// Retrieves key from fd kfile, assures key is long enough
 char* getKey(char* kfile, int plen){
     FILE* fd = fopen(kfile, "r");
     char* key = NULL;
@@ -58,8 +68,11 @@ char* getKey(char* kfile, int plen){
     }
     // Check key for bad characters
     if(checkText(key, keyLen)){
+        fclose(fd);
         return key;
     }
+    fclose(fd);
+    return NULL;
 }
 
 /*------------------------------check---daemon-----------------------------------*/
@@ -81,7 +94,6 @@ int verifyDaemon(int socketFD){
 
     // If rejected
     if(res=='r'){
-        perror("Connection REJECTED\n");
         exit(2);
     }
     // otp_enc connected to otp_enc_d
@@ -125,7 +137,8 @@ int connectDaemon(char* port){
     }
 
 }
-
+/*------------------------------------send--------------------------------------*/
+// Writes string to server
 void sendString(int socketFD, char* str){
     int sent = 0;
     int len = strlen(str);
@@ -143,7 +156,7 @@ void sendString(int socketFD, char* str){
         charsOut = recv(socketFD, &res, 1, 0); // Read data from the socket
     }while(charsOut<=0);
 
-    // String received
+    // String acknowledged
     if(res=='!'){
         return;
     }
@@ -159,8 +172,7 @@ char* recvCipher(int socketFD, int length){
     // Loop until no more characters received
     do{
         charsRead = recv(socketFD, key, length, 0);
-    }while(charsRead!=length);
-
+    }while(charsRead!=0);
 /*
     printf("\n===\nPackets:%d\n",strLength);
     printf("Chars read: %d\nBUFFER: %s\n", charsRead, buffer);
@@ -170,19 +182,18 @@ char* recvCipher(int socketFD, int length){
 }
 int main(int argc, char* argv[]){
     // Catch bad parameters
-    if(argc<4){
+    if(argc < 4){
         fprintf(stderr, "Syntax Error!\nUsage: %s plaintext key port\n", argv[0]);
         return 1;
     }
+
     else{
         // Get plaintext
-        char* plaintext = getCipher(argv[1]);
-        // Now that we have valid plaintext, get length from plaintext
-        // Get key
+        char* plaintext = getPlaintext(argv[1]);
+        // Get key make and sure its long enough
         char* key = getKey(argv[2], strlen(plaintext));
         
-        // printf("key: %s\ntxt: %s", key, plaintext);
-        // Connect
+        // Connect to socket
         int socket = connectDaemon(argv[3]);
         // Send
         sendString(socket, plaintext);
