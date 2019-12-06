@@ -48,6 +48,7 @@ char* encrypt(char* ptxt, char* key){
     // Append newline
     cipher[len]='\n';
     cipher[len+1]='\0';
+
     return cipher;
 }
 // Returns opened socket filedescriptor
@@ -133,14 +134,14 @@ void sendCipher(int establishedConnectionFD, char* cipher){
 /*-------------------------------Handle--connection------------------------------*/
 char* getSocketString(int socketFD){
     int charsRead = -5;
-    char buffer[11];
+    char buffer[1001];
     char* key = NULL;// Not necessarily the key, could be ptxt
     int strLength = 1; // Complete length of string + NULL term
-    memset(buffer, '\0', 11);
 
     // Loop until no more characters received                
     do{
-        charsRead = recv(socketFD, buffer, 10, 0);
+        memset(buffer, '\0', 1001);
+        charsRead = recv(socketFD, buffer, 1000, 0);
         if(charsRead>0){
             // Stop at newline
             charsRead = strcspn(buffer, "\n");
@@ -150,16 +151,15 @@ char* getSocketString(int socketFD){
             key = realloc(key, strLength * sizeof(char));
             
             // If initial, set NULL
-            if(strLength<=11){
+            if(strLength<=1001){
                 memset(key, '\0', strLength);
             }
 
             // Copy until newline
             strncat(key, buffer, charsRead * sizeof(char));
-            memset(buffer, '\0', 11);
 
             // If encountered newline, stop looping
-            if(charsRead<10){
+            if(charsRead<1000){
                 break;
             }
         }
