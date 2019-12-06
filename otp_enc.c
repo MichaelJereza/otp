@@ -177,6 +177,7 @@ char* recvCipher(int socketFD, int length){
         memset(buffer, '\0', 1001);
         charsRead = recv(socketFD, buffer, 1000, 0);
         if(charsRead>0){
+            
             // Stop at newline
             charsRead = strcspn(buffer, "\n");
             strLength += charsRead;
