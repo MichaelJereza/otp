@@ -161,7 +161,7 @@ void sendString(int socketFD, char* str){
 
 char* recvCipher(int socketFD, int length){
     int charsRead = -5;
-    char buffer[10];
+    char buffer[11];
     char* key = malloc(sizeof(char)*length);
     memset(key, '\0', length);
     int strLength = 1; // Complete length of string + NULL term
@@ -171,6 +171,7 @@ char* recvCipher(int socketFD, int length){
 
     // Loop until no more characters received
     do{
+        memset(buffer, '\0', 11);
         charsRead = recv(socketFD, buffer, 10, 0);
         if(charsRead>0){
             // Stop at newline
@@ -179,7 +180,6 @@ char* recvCipher(int socketFD, int length){
 
             // Copy until newline
             strncat(key, buffer, charsRead * sizeof(char));
-            memset(buffer, '\0', 10);
 
             // If encountered newline, stop looping
             if(charsRead<10){
