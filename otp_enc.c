@@ -28,11 +28,10 @@ int checkText(char* Text, int len){
 // Get plaintext at argv[1]
 char* getPlaintext(char* pfile){
     FILE* fd = fopen(pfile, "r");
- /*   if(fd == NULL){
+    if(fd == NULL){
         perror("Can't open plaintext\n");
         exit(1);
     }
-    */
     char* plaintext = NULL; // Plaintext
     size_t ptextSize = 0;   
     int ptextLen = -1;      // Length of plaintext
@@ -165,7 +164,7 @@ void sendString(int socketFD, char* str){
 char* recvCipher(int socketFD, int length){
     int charsRead = -5;
     char buffer[1001];
-    char* key = malloc(sizeof(char)*length+2);
+    char* key = malloc(sizeof(char)*length+1);
     memset(key, '\0', length);
     int strLength = 1; // Complete length of string + NULL term
     int received = 0;
@@ -219,5 +218,6 @@ int main(int argc, char* argv[]){
         printf("%s",cipher);
         free(plaintext);
         free(key);
+        free(cipher);
     }
 }
