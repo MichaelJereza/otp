@@ -162,7 +162,7 @@ void sendString(int socketFD, char* str){
 char* recvCipher(int socketFD, int length){
     int charsRead = -5;
     char buffer[1001];
-    char* key = malloc(sizeof(char)*length+1);
+    char* key = malloc(sizeof(char)*length+2);
     memset(key, '\0', length);
     int strLength = 1; // Complete length of string + NULL term
     int received = 0;
@@ -183,7 +183,11 @@ char* recvCipher(int socketFD, int length){
 
             // If encountered newline, stop looping
             if(charsRead<1000){
-                break;
+                send(socketFD, "#", 1, 0);
+            }
+            // Ask for more
+            else{
+                send(socketFD, "!", 1, 0);
             }
         }
     }while(strLength!=length);
