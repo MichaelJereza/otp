@@ -124,7 +124,7 @@ int verifyConnection(int establishedConnectionFD){
 void sendCipher(int establishedConnectionFD, char* cipher){
     int len = strlen(cipher);
     int charsOut = 0, sent = 0;
-    char res='x'
+    char res='x';
     do{
         // Send Plaintext
         charsOut = send(establishedConnectionFD, cipher+sent, 1000, 0);
