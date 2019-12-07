@@ -124,11 +124,14 @@ int verifyConnection(int establishedConnectionFD){
 void sendCipher(int establishedConnectionFD, char* cipher){
     int len = strlen(cipher);
     int charsOut = 0, sent = 0;
+    char res='x';// init for debug
     do{
-        // Send Plaintext
-        charsOut = send(establishedConnectionFD, cipher, len, 0);
+        // Send 1000 characters location based on sent
+        charsOut = send(establishedConnectionFD, cipher+sent, 1000, 0);
         sent+=charsOut;
-    }while(sent!=len);
+        recv(establishedConnectionFD, &res, 1, 0);
+    //    fprintf(stderr, "GOT %c\n", res);
+    }while(res=='!');
     return;
 }
 /*-------------------------------Handle--connection------------------------------*/

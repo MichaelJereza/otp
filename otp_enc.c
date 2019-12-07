@@ -171,12 +171,17 @@ char* recvCipher(int socketFD, int length){
 
     //printf("\nlen:%d\n",length);
 
+    // Get 1000 characters
+    // If theres a newline, got em all
+    //
+    // Else
+    //      Ask for 1000 more characters
+
     // Loop until no more characters received
     do{
         memset(buffer, '\0', 1001);
         charsRead = recv(socketFD, buffer, 1000, 0);
-        if(charsRead>0){
-            
+        if(charsRead>0){  
             // Stop at newline
             charsRead = strcspn(buffer, "\n");
             strLength += charsRead;
@@ -184,9 +189,14 @@ char* recvCipher(int socketFD, int length){
             // Copy until newline
             strncat(key, buffer, charsRead * sizeof(char));
 
-            // If encountered newline, stop looping
+            // If encountered newline, you got it girl 
             if(charsRead<1000){
-                break;
+                send(socketFD, "#", 1, 0);
+               // fprintf(stderr, "%d SHOULD BE EQUAL %d\n", strLength, length);
+            }
+            // Ask for more
+            else{
+                send(socketFD, "!", 1, 0);
             }
         }
     }while(strLength!=length);
