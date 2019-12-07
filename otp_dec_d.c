@@ -11,7 +11,6 @@ char* decrypt(char* ctxt, char* key){
     int p = 0,k = 0, len = strlen(ctxt);
     int c = 0;
     int o;
-    
     char* deciphered = malloc((len+2)*sizeof(char));
     memset(deciphered, '\0', len+2);
     for(c = 0; c < len; c++){
@@ -48,7 +47,6 @@ char* decrypt(char* ctxt, char* key){
     // Append newline
     deciphered[len]='\n';
     deciphered[len+1]='\0';
-    
     return deciphered;
 }
 // Returns opened socket filedescriptor
@@ -156,7 +154,7 @@ char* getSocketString(int socketFD){
             }
 
             // Copy until newline
-            strncat(key, buffer, charsRead * sizeof(char));
+            strncat(key, buffer, charsRead);
 
             // If encountered newline, stop looping
             if(charsRead<1000){
@@ -167,6 +165,7 @@ char* getSocketString(int socketFD){
 
     // Acknowledge string received
     charsRead = send(socketFD, "!", 1, 0);
+
     return key;
 
 }
