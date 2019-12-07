@@ -130,7 +130,6 @@ void sendCipher(int establishedConnectionFD, char* cipher){
         charsOut = send(establishedConnectionFD, cipher+sent, 1000, 0);
         sent+=charsOut;
         recv(establishedConnectionFD, &res, 1, 0);
-        fprintf(stderr, "GOT %c\n", res);
     }while(res=='!');
     return;
 }
