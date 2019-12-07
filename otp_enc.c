@@ -192,7 +192,7 @@ char* recvCipher(int socketFD, int length){
             // If encountered newline, you got it girl 
             if(charsRead<1000){
                 send(socketFD, "#", 1, 0);
-               // fprintf(stderr, "%d SHOULD BE EQUAL %d\n", strLength, length);
+                fprintf(stderr, "%d SHOULD BE EQUAL %d\n", strLength, length);
             }
             // Ask for more
             else{
