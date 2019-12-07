@@ -28,11 +28,10 @@ int checkText(char* Text, int len){
 // Get plaintext at argv[1]
 char* getPlaintext(char* pfile){
     FILE* fd = fopen(pfile, "r");
- /*   if(fd == NULL){
+    if(fd == NULL){
         perror("Can't open plaintext\n");
         exit(1);
     }
-    */
     char* plaintext = NULL; // Plaintext
     size_t ptextSize = 0;   
     int ptextLen = -1;      // Length of plaintext
@@ -169,8 +168,6 @@ char* recvCipher(int socketFD, int length){
     memset(key, '\0', length);
     int strLength = 1; // Complete length of string + NULL term
     int received = 0;
-
-    //printf("\nlen:%d\n",length);
 
     // Loop until no more characters received
     do{
